@@ -1,0 +1,135 @@
+ПРОЕКТ «БЛОГЕР» — ПРЕДЛОЖЕНИЕ КОНТРАКТА API v0.2
+Frontend A, неделя 2. Дата: 25 ноября 2026.
+СТАТУС: НЕ СОГЛАСОВАНО. Методы ниже предложены, существующий API не подтверждён.
+
+Основания
+Задачи_и_рекомендации_команде.md: Frontend A, неделя 2; Backend A, неделя 2.
+Этап_1_Продуктовая_часть.md: разделы 2–5, два пути и учебные задания.
+Этап_2_Профили_и_каналы.md: разделы 1–4, поля, видимость и статистика.
+Этапы_реализации_платформы.md: этапы 1–3.
+Все имена методов, ключей, коды перечислений и числовые ограничения ниже —
+предложения для согласования с Backend A. Никаких серверных вызовов макет не делает.
+
+1. Общие правила
+JSON UTF-8. ID — непрозрачные строки, интерфейс не извлекает из них смысл.
+Даты/время — ISO 8601 с часовым поясом; календарные даты — YYYY-MM-DD.
+Деньги — целое число копеек amount_minor и currency='RUB'; не число с плавающей точкой.
+Базовая цена, бюджет и согласованная сумма — разные поля, взаимно не заменяются.
+null означает «Пока нет данных». Числовой 0 — известное нулевое значение.
+Демонстрационное происхождение: is_demo=true и source_kind='synthetic'.
+Ссылки на работы — абсолютные https URL либо отсутствуют. Не передавать javascript URL.
+
+2. Публичные методы
+GET /api/v1/authors
+Ответ: {data:[AuthorCard], meta:{page,page_size,total,total_pages}, request_id}.
+AuthorCard: id, display_name, city, bio, topics[], channels[].
+Channel: id, platform, display_name, url|null, ownership_status, statistics_status,
+statistics, services[], works[]. Каждая площадка имеет собственную статистику.
+Service: id, format, title, description, base_price:{amount_minor,currency},
+availability:{status,available_from|null,delivery_days|null,description},
+revision_terms, usage_rights. terms могут быть null до согласования.
+Work: id, title, format, description, preview_url|null, media_url|null, is_demo.
+Число прошлых заказов не служит условием исключения опубликованного автора.
+Для листинга вернуть только каналы/услуги, соответствующие всем заданным фильтрам,
+чтобы цена одного канала не смешивалась со статистикой другого.
+
+GET /api/v1/authors/{id}
+Публичные поля автора и все опубликованные каналы/услуги/работы.
+Черновики, email для входа, рабочие контакты и исходные подтверждения не возвращать.
+Неопубликованный/недоступный профиль — 404 по предложенной политике,
+не раскрывать его приватные поля в тексте ошибки.
+
+GET /api/v1/advertising-tasks
+Ответ с тем же meta. Результат группируется интерфейсом по компании при необходимости.
+Task: id, company:{id,display_name,city,topic,description}, title, description,
+platform, format, budget:{amount_minor,currency}, response_deadline|null,
+delivery_days, requirements, materials[], revision_terms, usage_rights,
+publication_min_hours|null, status, initiation_mode, is_demo.
+Компания и задание — разные сущности. status=open/closed/expired/draft.
+initiation_mode=invitation/open_response. Пример «Зёрен» — invitation,
+пример «Страниц» — open_response.
+
+GET /api/v1/advertising-tasks/{id}
+Полная публичная карточка. Для закрытого задания предложено возвращать карточку
+со status=closed и без доступного действия отклика. Для чужого черновика — 404.
+Это правило скрытия требуется подтвердить продакт-менеджеру и Backend A.
+
+3. Статистика
+followers: integer|null.
+median_views: integer|null.
+publication_format: vk_clip/telegram_post/vk_post.
+sample_size: integer|null; measurement_window_hours: integer|null.
+measured_on: YYYY-MM-DD|null; source_kind: synthetic/author/moderator/api;
+source_description: string|null; verified_at: ISO 8601|null.
+Пример: 3100 — медиана по 10 VK Клипам, первые 48 часов каждого,
+дата среза 2026-11-20, источник «Учебная выборка».
+Дата среза хранится в measured_on с точностью до дня. Время фактической
+проверки модератором хранится отдельно в verified_at. Оба поля подтвердить с Backend A.
+Если просмотры не null, необходимы формат, выборка, окно замера, дата и источник.
+Статусы независимы: ownership_status, statistics_status,
+placement_eligibility (для конкретного размещения/заказа, не общий значок автора).
+Подтверждение владения не подтверждает статистику автоматически.
+
+4. Фильтры и сортировка — предложение
+Авторы:
+platform: vk/telegram; format: vk_clip/vk_post/telegram_post;
+topic: slug из справочника; city: slug;
+price_max_minor: integer >= 0; available_by: YYYY-MM-DD;
+followers_min/max, median_views_min/max — только для того же выбранного канала.
+Отсутствующая статистика не удовлетворяет числовому фильтру просмотров.
+Задания:
+platform, format, topic, city;
+budget_min_minor: integer >= 0; status=open (для обычной публичной ленты).
+Сортировка:
+авторы — recommended/price_asc/price_desc (критерий recommended ещё надо определить);
+задания — newest/budget_asc/budget_desc.
+У всех сортировок вторичный стабильный ключ id, чтобы не дублировать записи по страницам.
+Неизвестный параметр/enum/неверная дата/отрицательный бюджет — 400, ошибка нужного поля.
+
+page: integer >= 1, по умолчанию 1.
+page_size: integer 1..50, по умолчанию 20.
+Пустой список: data=[], total=0, total_pages=0, без ошибки.
+Страница за диапазоном: data=[] с корректным meta; интерфейс предлагает первую страницу.
+Смена фильтра сбрасывает page на 1. Параметры сохраняются в URL.
+Текущий прототип использует русские подписи platform и сумму в рублях в budget.
+При интеграции адаптер переводит их в enum и копейки; бюджет <= 1 000 000 ₽
+в форме библиотеки — только демонстрационное ограничение, не бизнес-правило API.
+Сейчас реально работают только площадка и бюджет на учебном массиве.
+
+5. Формат ошибок
+{error:{code,message,fields:{имя_поля:сообщение},request_id}}
+400 INVALID_FILTER — неверные параметры; показать рядом с фильтром.
+401 UNAUTHENTICATED — для приватного действия; вход с возвратом в исходный контекст.
+403 FORBIDDEN — запрет действия, не выдавать скрытые данные.
+404 NOT_FOUND — недоступная карточка; ссылка обратно в каталог.
+409 CONFLICT — состояние изменилось; обновить карточку, не показывать успех.
+422 VALIDATION_ERROR — ошибки полей формы.
+429 RATE_LIMITED — временно ограничить повтор согласно Retry-After.
+500/503 TEMPORARY_ERROR — сообщение об ошибке и повтор с теми же фильтрами.
+Технические подробности и stack trace пользователю не показывать.
+Сетевой сбой — локальный NETWORK_ERROR с понятным повтором, без поддельного request_id.
+
+6. Авторизация и профили — подготовка следующих недель
+Для недели 3 нужны: POST /auth/register, POST /auth/login, POST /auth/logout,
+GET /auth/me, POST /auth/password-reset/request, POST /auth/password-reset/confirm.
+Префикс методов: /api/v1. Запросы: email/password; reset confirm — token/new_password.
+Backend A подтверждает: обязательные поля регистрации, ограничения пароля,
+формат сессии/CSRF, срок ссылки, коды ошибок и защиту восстановления от перебора.
+Предпочтительная схема для обсуждения: серверная сессия в HttpOnly cookie;
+конкретный механизм ещё не выбран. Клиент не хранит пароль.
+Один аккаунт может иметь оба профиля; роли — набор, не один взаимоисключающий флаг.
+Редактирование профилей и каналов — Backend A + Frontend B, вне реализации этой недели.
+
+7. Переход к Frontend B
+Передавать тип entry=invite/response, author_id, channel_id, service_id|null,
+company_id, task_id, предложенную цену и текст/идею. Финальные команды сделки
+принадлежат Backend B. Эти данные не означают согласованный заказ.
+Согласовать хранение черновика и возврат после входа; не помещать приватный текст в URL.
+
+8. Что нужно подтвердить
+Backend A: маршруты, schema, обязательность/null, enum, деньги, справочники,
+сортировка, meta, фильтры, ошибки, правила закрытых карточек и авторизации.
+Frontend B: те же денежные компоненты, статусы, поля, ошибки и диалог;
+передача контекста и владение компонентами.
+Продакт-менеджер: правила доступности, открытых/закрытых заданий и сортировки.
+Согласование не выполнено. Реальный сервер и исходники backend не переданы.

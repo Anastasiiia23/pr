@@ -1,0 +1,74 @@
+{
+  "data": [
+    {
+      "id": "author_demo_sasha",
+      "display_name": "Саша Медведева",
+      "city": "Москва",
+      "bio": "Короткие обзоры кафе",
+      "topics": [
+        "food"
+      ],
+      "completed_orders_count": 0,
+      "is_demo": true,
+      "channels": [
+        {
+          "id": "channel_demo_sasha_vk",
+          "platform": "vk",
+          "display_name": "Саша пробует",
+          "url": null,
+          "ownership_status": "unverified",
+          "statistics_status": "synthetic",
+          "statistics": {
+            "followers": 8400,
+            "median_views": 3100,
+            "publication_format": "vk_clip",
+            "sample_size": 10,
+            "measurement_window_hours": 48,
+            "measured_on": "2026-11-20",
+            "source_kind": "synthetic",
+            "source_description": "Учебная выборка",
+            "verified_at": null
+          },
+          "services": [
+            {
+              "id": "service_demo_sasha_clip",
+              "format": "vk_clip",
+              "title": "Обзор кафе до 45 секунд",
+              "description": "Выезд, один клип, один раунд фактических исправлений",
+              "base_price": {
+                "amount_minor": 300000,
+                "currency": "RUB"
+              },
+              "availability": {
+                "status": "available",
+                "available_from": null,
+                "delivery_days": 7,
+                "description": "Свободна на этой неделе — учебный сценарий"
+              },
+              "revision_terms": "Один раунд фактических исправлений",
+              "usage_rights": "Размещение в канале автора; платная кампания согласуется отдельно"
+            }
+          ],
+          "works": [
+            {
+              "id": "work_demo_breakfast",
+              "title": "Завтрак в районной пекарне",
+              "format": "vk_clip",
+              "description": "Учебная раскадровка клипа на 35 секунд",
+              "preview_url": null,
+              "media_url": null,
+              "is_demo": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "page_size": 20,
+    "total": 1,
+    "total_pages": 1
+  },
+  "request_id": "demo-request-001"
+}
