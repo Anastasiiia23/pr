@@ -1,0 +1,13 @@
+{
+  "name": "blogger-frontend",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Учебный прототип Frontend A проекта «блогер», недели 1–2",
+  "scripts": {
+    "test": "node check.cjs && node check-week2.cjs",
+    "check": "node --check dist/ui.js && node --check dist/components.js && node --check dist/app.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
